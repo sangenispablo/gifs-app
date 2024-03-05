@@ -11,7 +11,9 @@ export class GifsService {
   private apiKey: string = '2MlHV8O0vKTC0r91MG8ed3RT7gdkgk7C';
   private serviceUrl: string = 'https://api.giphy.com/v1/gifs';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    this.loadLocalStorage();
+  }
 
   get tagHistory() {
     return [...this._tagHistory];
@@ -24,17 +26,23 @@ export class GifsService {
     }
     this._tagHistory.unshift(tag);
     this._tagHistory = this._tagHistory.splice(0, 10);
+    this.saveLocalStorage();
+  }
+
+  private saveLocalStorage(): void {
+    localStorage.setItem('history', JSON.stringify(this._tagHistory));
+  }
+
+  private loadLocalStorage(): void {
+    if (!localStorage.getItem('history')) return;
+    this._tagHistory = JSON.parse(localStorage.getItem('history')!);
+    if (this._tagHistory.length === 0) return;
+    this.searchTag(this._tagHistory[0]);
   }
 
   searchTag(tag: string): void {
     if (tag.length === 0) return;
     this.organizeHistory(tag);
-    // Esta es la forma tradicional, pero FH no lo hace así, usa HttpClient
-    // fetch(
-    //   'https://api.giphy.com/v1/gifs/trending?api_key=2MlHV8O0vKTC0r91MG8ed3RT7gdkgk7C&limit=10'
-    // )
-    //   .then((resp) => resp.json())
-    //   .then((data) => console.log(data));
     const params = new HttpParams()
       .set('api_key', this.apiKey)
       .set('limit', '10')
